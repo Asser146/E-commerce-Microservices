@@ -1,10 +1,10 @@
 package com.ecommerce.products.models;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -12,9 +12,6 @@ public class Product {
     @Id
     @Column(name = "id")
     private int id;
-
-    @Column(name = "stock")
-    private int stock;
     @Column(name = "gender")
     private String gender;
     @Column(name = "master_category")
@@ -27,22 +24,57 @@ public class Product {
     private String usage_category;
     @Column(name = "title")
     private String title;
+    @Column(name = "stock")
+    private int stock;
     @Column(name = "arrival_status")
     private String arrival_status;
+    @Column(name = "price")
+    private double price;
+    @Column(name = "image_path")
+    private String image_path;
+    @Column(name = "rating")
+    private double rating;
 
-    public Product(int id, int stock, String gender, String master_category, String sub_category, String season, String usage_category, String title, String arrival_status) {
+    public Product(int id, String gender, String master_category, String sub_category, String season, String usage_category, String title, int stock, String arrival_status, double price, String image_path, double rating) {
         this.id = id;
-        this.stock = stock;
         this.gender = gender;
         this.master_category = master_category;
         this.sub_category = sub_category;
         this.season = season;
         this.usage_category = usage_category;
         this.title = title;
+        this.stock = stock;
         this.arrival_status = arrival_status;
+        this.price = price;
+        this.image_path = image_path;
+        this.rating = rating;
     }
 
     public Product() {
+    }
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
+    public String getImage_path() {
+        return image_path;
+    }
+
+    public void setImage_path(String image_path) {
+        this.image_path = image_path;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 
     public int getId() {

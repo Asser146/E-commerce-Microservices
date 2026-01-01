@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/products")
@@ -28,7 +29,7 @@ public class ProductController {
         return productServices.getProductById(id);
     }
     @GetMapping("/new")
-public  List<Product> getNewArrivals   ()   {
+        public  List<Product> getNewArrivals   ()   {
     return productServices.getNewArrivals();
     }
 
@@ -40,5 +41,21 @@ public  List<Product> getNewArrivals   ()   {
     @GetMapping("/season/{season}")
     public List<Product> getProductsBySeason(@PathVariable String season){
         return productServices.getBySeason(season);
+    }
+    @GetMapping("/colors")
+    public List<String> getColors(){
+        return productServices.getAllColors();
+    }
+    @GetMapping("/colors/{id}")
+    public List<String> getProductColors(@PathVariable int id){
+        return productServices.getProductColors(id);
+    }
+    @GetMapping("/sizes")
+    public List<String> getSizes(){
+        return productServices.getAllSizes();
+    }
+    @GetMapping("/sizes/{id}")
+    public List<String> getProductSizes(@PathVariable int id){
+        return productServices.getProductSizes(id);
     }
 }

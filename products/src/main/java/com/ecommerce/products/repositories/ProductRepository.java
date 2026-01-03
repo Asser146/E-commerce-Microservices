@@ -1,6 +1,8 @@
 package com.ecommerce.products.repositories;
 
 import com.ecommerce.products.models.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,10 +14,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findNewArrivals();
 
     @Query("SELECT p FROM Product p WHERE p.usage_category = :category")
-    List<Product> findByUsageCategory(@Param("category") String category);
+    Page<Product> findByUsageCategory(@Param("category") String category, Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE p.season = :season")
-    List<Product> findBySeason(@Param("season") String season);
-
+    Page<Product> findBySeason(@Param("season") String season, Pageable pageable);
 
 }

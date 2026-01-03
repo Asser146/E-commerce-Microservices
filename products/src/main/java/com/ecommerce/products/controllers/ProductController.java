@@ -2,13 +2,12 @@ package com.ecommerce.products.controllers;
 
 import com.ecommerce.products.models.Product;
 import com.ecommerce.products.services.ProductServices;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("api/products")
@@ -21,8 +20,12 @@ public class ProductController {
     }
 
     @GetMapping("/all")
-    public List<Product> getProducts(){
-        return productServices.getAllProducts();
+    public PagedModel<Product> getProducts(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productServices.getAllProducts(pageable);
     }
     @GetMapping("/{id}")
     public Product getProducts(@PathVariable long id){
@@ -34,13 +37,19 @@ public class ProductController {
     }
 
     @GetMapping("/usage/{usage}")
-    public List<Product> getProductsByUsage(@PathVariable String usage){
-        return productServices.getByUsageCategory(usage);
+    public PagedModel<Product> getProductsByUsage(@PathVariable String usage,
+                                            @RequestParam(value = "page", defaultValue = "0") int page,
+                                            @RequestParam(value = "size", defaultValue = "20") int size){
+        Pageable pageable = PageRequest.of(page,size);
+        return productServices.getByUsageCategory(usage,pageable);
     }
 
     @GetMapping("/season/{season}")
-    public List<Product> getProductsBySeason(@PathVariable String season){
-        return productServices.getBySeason(season);
+    public PagedModel<Product> getProductsBySeason(@PathVariable String season ,
+                                             @RequestParam(value = "page", defaultValue = "0") int page,
+                                             @RequestParam(value = "size", defaultValue = "20") int size){
+        Pageable pageable = PageRequest.of(page,size);
+        return productServices.getBySeason(season,pageable);
     }
     @GetMapping("/colors")
     public List<String> getColors(){
@@ -57,5 +66,18 @@ public class ProductController {
     @GetMapping("/sizes/{id}")
     public List<String> getProductSizes(@PathVariable int id){
         return productServices.getProductSizes(id);
+
     }
+    @GetMapping("/filter")
+    public PagedModel<Product> getProductsByFilter(
+            @RequestParam(value = "colors", defaultValue = "") List<String> colors,
+            @RequestParam(value = "sizes", defaultValue = "") List<String> sizes,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productServices.getByFilter(colors, sizes, pageable);
+    }
+
 }
+

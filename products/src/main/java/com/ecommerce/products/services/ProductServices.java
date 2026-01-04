@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,6 +20,10 @@ public class ProductServices {
 
     private final ProductRepository repository;
     private final JdbcTemplate jdbcTemplate;
+    private  final Map<String, String> SORT_COLUMN_MAP = Map.of(
+            "price", "p.price",
+            "rating", "p.rating"
+    );
 
 
     public ProductServices(ProductRepository repository,JdbcTemplate jdbcTemplate) {
@@ -74,10 +79,10 @@ public class ProductServices {
         return jdbcTemplate.queryForList(sql, String.class);
     }
 
-    public PagedModel<Product> getByFilter(List<String> colors, List<String> sizes, Pageable pageable) {
+    public PagedModel<Product> getByFilter(List<String> colors, List<String> sizes,List<String> subCategories,List<Double> pricesRange,List<String> dressStyles, Pageable pageable) {
         // Base SQL for fetching products
         StringBuilder sql = new StringBuilder(
-                "SELECT DISTINCT p.* " +
+                "SELECT  p.* " +
                         "FROM products p " +
                         "JOIN products_colors pc ON p.id = pc.product_id " +
                         "JOIN products_sizes ps ON p.id = ps.product_id " +
@@ -85,7 +90,7 @@ public class ProductServices {
         );
         // Base SQL for counting total elements
         StringBuilder countSql = new StringBuilder(
-                "SELECT COUNT(DISTINCT p.id) " +
+                "SELECT COUNT(p.id) " +
                         "FROM products p " +
                         "JOIN products_colors pc ON p.id = pc.product_id " +
                         "JOIN products_sizes ps ON p.id = ps.product_id " +
@@ -110,10 +115,52 @@ public class ProductServices {
             params.addAll(sizes);
         }
 
+        if (subCategories != null && !subCategories.isEmpty()) {
+            String placeholders = subCategories.stream().map(s -> "?").collect(Collectors.joining(","));
+            sql.append(" AND p.sub_category IN (" + placeholders + ") ");
+            countSql.append(" AND p.sub_category IN (" + placeholders + ") ");
+            params.addAll(subCategories);
+        }
+        if (pricesRange != null && pricesRange.size() == 2) {
+            sql.append(" AND p.price BETWEEN ? AND ? ");
+            countSql.append(" AND p.price BETWEEN ? AND ? ");
+            params.add(pricesRange.get(0));
+            params.add(pricesRange.get(1));
+        }
+
+        if (dressStyles != null && !dressStyles.isEmpty()) {
+            String placeholders = dressStyles.stream().map(s -> "?").collect(Collectors.joining(","));
+            sql.append(" AND p.usage_category IN (" + placeholders + ") ");
+            countSql.append(" AND p.usage_category IN (" + placeholders + ") ");
+            params.addAll(dressStyles);
+        }
+
+        if (pageable.getSort().isSorted()) {
+
+            sql.append(" ORDER BY ");
+            List<String> orderClauses = new ArrayList<>();
+
+            pageable.getSort().forEach(order -> {
+                String column = SORT_COLUMN_MAP.get(order.getProperty());
+                if (column != null) {
+                    orderClauses.add(column + " " + order.getDirection().name());
+                }
+            });
+
+            if (!orderClauses.isEmpty()) {
+                sql.append(String.join(", ", orderClauses));
+            } else {
+                sql.append(" p.rating DESC ");
+            }
+
+        } else {
+            sql.append(" ORDER BY p.rating DESC ");
+        }
+
         // Pagination for product query
         sql.append(" LIMIT ? OFFSET ? ");
         params.add(pageable.getPageSize());
-        params.add(pageable.getPageNumber() * pageable.getPageSize());
+        params.add(pageable.getOffset());
 
 
         // Execute product query

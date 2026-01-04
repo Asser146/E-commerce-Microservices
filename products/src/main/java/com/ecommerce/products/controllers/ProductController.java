@@ -72,11 +72,14 @@ public class ProductController {
     public PagedModel<Product> getProductsByFilter(
             @RequestParam(value = "colors", defaultValue = "") List<String> colors,
             @RequestParam(value = "sizes", defaultValue = "") List<String> sizes,
+            @RequestParam(value = "sub_categories", defaultValue = "") List<String> subCategories,
+            @RequestParam(value = "price_range", defaultValue = "") List<Double> priceRange,
+            @RequestParam(value = "styles", defaultValue = "") List<String> styles,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return productServices.getByFilter(colors, sizes, pageable);
+        return productServices.getByFilter(colors, sizes,subCategories,priceRange,styles, pageable);
     }
 
 }

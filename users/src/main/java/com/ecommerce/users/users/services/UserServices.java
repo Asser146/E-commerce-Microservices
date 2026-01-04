@@ -13,11 +13,11 @@ import java.util.List;
 public class UserServices {
 
     private final UserRepository userRepository;
-    private final RestTemplate restTemplate;
+//    private final RestTemplate restTemplate;
 
     public UserServices(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.restTemplate = new RestTemplate();
+//        this.restTemplate = new RestTemplate();
     }
 
 //    public void fetchAndSaveUsers() {
@@ -30,4 +30,9 @@ public class UserServices {
 //            userRepository.saveAll(Arrays.asList(users));
 //        }
 //    }
+        public List<User> getUsers() {
+
+            return userRepository.findAll();
+
+    }
 }

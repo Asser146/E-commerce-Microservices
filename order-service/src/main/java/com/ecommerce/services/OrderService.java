@@ -4,6 +4,7 @@ import com.ecommerce.models.OrderItemResponse;
 import com.ecommerce.models.OrderResponse;
 import com.ecommerce.models.Product;
 import com.ecommerce.repositories.OrdersRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class OrderService {
         }).toList();
     }
 
+    @CircuitBreaker(name = "productBreaker")
     public List<Product> getTopOrders() {
 
         List<Integer> productIds =
@@ -49,6 +51,7 @@ public class OrderService {
                 );
 
         if (productIds.isEmpty()) {
+            System.out.println(productIds);
             return List.of();
         }
         String idsParam = productIds.stream()
@@ -56,13 +59,25 @@ public class OrderService {
                 .reduce((a, b) -> a + "," + b)
                 .orElse("");
 
-        // 3️⃣ Call Product service using WebClient
-        return webClient.build().get()
-                .uri("http://products/api/top")
+
+
+        List<Product> topProducts =  webClient.build().get()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("http")        // optional
+                        .host("product-service") // just service name
+                        .path("/api/top")
+                        .queryParam("ids", idsParam)
+                        .build())
                 .retrieve()
                 .bodyToFlux(Product.class)
                 .collectList()
-                .block();   // blocking since your service is not reactive
+                .block();
+        if (topProducts==null||topProducts.isEmpty()) {
+            throw new RuntimeException("Product Service Error");
+        } else {
+            return topProducts;
+        }
+        // blocking since your service is not reactive
     }
 
 }

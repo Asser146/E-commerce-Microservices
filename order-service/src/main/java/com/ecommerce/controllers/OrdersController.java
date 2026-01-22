@@ -5,6 +5,7 @@ import com.ecommerce.models.OrderResponse;
 import com.ecommerce.models.Product;
 import com.ecommerce.services.CustomerOrderService;
 import com.ecommerce.services.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +26,10 @@ public class OrdersController {
         return orderService.getAllOrders();
     }
     @GetMapping("top")
-    public List<Product> getTopOrders(){
+    public List<Product> getTopOrders() {
         return orderService.getTopOrders();
     }
+
     // ************ Customer Interactions ************
     @PostMapping("create")
     public String createOrder(@RequestBody CreateOrderRequest request) {

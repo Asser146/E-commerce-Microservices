@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -42,7 +43,8 @@ public class OrderService {
         }).toList();
     }
 
-    @CircuitBreaker(name = "productBreaker")
+    @CircuitBreaker(name = "productBreaker",
+    fallbackMethod = "productBreakerFallback")
     public List<Product> getTopOrders() {
 
         List<Integer> productIds =
@@ -60,8 +62,7 @@ public class OrderService {
                 .orElse("");
 
 
-
-        List<Product> topProducts =  webClient.build().get()
+        return  webClient.build().get()
                 .uri(uriBuilder -> uriBuilder
                         .scheme("http")        // optional
                         .host("product-service") // just service name
@@ -72,12 +73,22 @@ public class OrderService {
                 .bodyToFlux(Product.class)
                 .collectList()
                 .block();
-        if (topProducts==null||topProducts.isEmpty()) {
-            throw new RuntimeException("Product Service Error");
-        } else {
-            return topProducts;
-        }
         // blocking since your service is not reactive
     }
+    public List<Product> productBreakerFallback(Exception e) {
+        List<Product> dummyProducts = new ArrayList<>();
+
+        dummyProducts.add(new Product(1, "Male", "Clothing", "Shirts", "Summer", "Casual",
+                "Dummy Shirt 1", 10, "New Arrival", 29.99, "/images/shirt1.jpg", 4.5));
+
+        dummyProducts.add(new Product(2, "Female", "Clothing", "Dresses", "Spring", "Formal",
+                "Dummy Dress 2", 5, "New Arrival", 49.99, "/images/dress2.jpg", 4.0));
+
+        dummyProducts.add(new Product(3, "Male", "Clothing", "Pants", "Winter", "Casual",
+                "Dummy Pants 3", 8, "Coming Soon", 39.99, "/images/pants3.jpg", 3.8));
+
+        return dummyProducts;
+    }
+
 
 }

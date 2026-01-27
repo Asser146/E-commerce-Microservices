@@ -79,8 +79,10 @@ public class CartService {
             return "Cart Updated";
         }
     }
-
-    public ActiveCartResponse getActiveCart(int userId) {
+    public List<Cart> getActiveCarts() {
+        return cartRepository.findAll();
+    }
+    public ActiveCartResponse getUserActiveCart(int userId) {
         Optional<Cart> existingCart =
                 cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
         return existingCart.map(cart -> new ActiveCartResponse(true, cart)).orElseGet(() -> new ActiveCartResponse(false, null));

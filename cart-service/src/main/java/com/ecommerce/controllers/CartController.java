@@ -17,10 +17,15 @@ import java.util.List;
 public class CartController {
 
     private final CartService cartService;
+    @GetMapping("/active")
+    public List<Cart> getActiveCarts()
+    {
+        return cartService.getActiveCarts();
+    }
 
     @GetMapping("/active/{userId}")
-    public ActiveCartResponse getActiveCart(@PathVariable int userId) {
-        return cartService.getActiveCart(userId);
+    public ActiveCartResponse getUserActiveCart(@PathVariable int userId) {
+        return cartService.getUserActiveCart(userId);
     }
 
     @PostMapping("/{userId}/items")

@@ -1,6 +1,8 @@
 package com.ecommerce.services;
 
 import com.ecommerce.models.Product;
+import com.ecommerce.models.StockItemRequest;
+import com.ecommerce.models.StockItemsResponse;
 import com.ecommerce.repositories.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -11,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -187,4 +190,50 @@ public class ProductServices {
     public List<Product> getProductsByIds(List<Integer> ids) {
         return repository.findAllById(ids);
     }
-}
+
+    public StockItemsResponse checkoutRequest(List<StockItemRequest> items) {
+            List<String> details = new ArrayList<>();
+            List<Integer> productIds = new ArrayList<>();
+            for (StockItemRequest item : items) {
+                productIds.add(item.getProductId());
+            }
+            List<Product> products = repository.findAllById(productIds);
+
+            Map<Integer, Product> productMap = new HashMap<>();
+            for (Product p : products) {
+                productMap.put(p.getId(), p);
+            }
+            boolean proceed=true;
+            for (StockItemRequest item : items) {
+                int productId = item.getProductId();
+                System.out.println("got product + "+productId);
+                int quantityRequested = item.getQuantity();
+                System.out.println("got quantity + "+quantityRequested);
+                Product product = productMap.get(productId);
+
+                if (product == null) {
+                    proceed=false;
+                    details.add(productId + ": Product not found");
+                } else if (product.getStock() < quantityRequested) {
+                    proceed=false;
+                    System.out.println("proceed + "+proceed);
+                    details.add(productId + ": Insufficient stock. Available=" + product.getStock());
+                }
+            }
+            if (proceed){
+                for (StockItemRequest item : items) {
+                    int productId = item.getProductId();
+                    int quantityRequested = item.getQuantity();
+                    Product product = productMap.get(productId);
+                    product.setStock(product.getStock() - quantityRequested);
+                }
+                repository.saveAll(products);
+                System.out.println("sucess");
+                return new StockItemsResponse(200, "All items processed successfully", details) ;
+            }else{
+                System.out.println("fail");
+                return new StockItemsResponse(409, "Some items could not be processed", details);
+            }
+
+        }
+    }

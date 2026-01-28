@@ -1,6 +1,9 @@
 package com.ecommerce.controllers;
 
+
 import com.ecommerce.models.Product;
+import com.ecommerce.models.StockItemRequest;
+import com.ecommerce.models.StockItemsResponse;
 import com.ecommerce.services.ProductServices;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -90,6 +93,12 @@ public class ProductController {
                 .map(Integer::parseInt)
                 .collect(Collectors.toList());
         return productServices.getProductsByIds(ids);
+    }
+    @PutMapping("/checkout")
+    public StockItemsResponse getTopProducts(@RequestBody List<StockItemRequest> items) {
+        // Convert CSV to List<Integer>
+
+        return productServices.checkoutRequest(items);
     }
 }
 

@@ -80,7 +80,7 @@ public class CartService {
         }
     }
     public List<Cart> getActiveCarts() {
-        return cartRepository.findAll();
+        return cartRepository.findByStatus(CartStatus.ACTIVE);
     }
     public ActiveCartResponse getUserActiveCart(int userId) {
         Optional<Cart> existingCart =
@@ -90,12 +90,11 @@ public class CartService {
     public String checkout(int userId) {
         Optional<Cart> existingCart =
                 cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE);
-        if (existingCart.isPresent()){
+        if (existingCart.isPresent()) {
             Cart cart = existingCart.get();
             double totalAmount = cart.getItems().stream()
                     .mapToDouble(item -> item.getPrice() * item.getQuantity())
                     .sum();
-
             CreateOrderRequest createOrderRequest = new CreateOrderRequest(
                     cart.getUserId(),
                     new Date(),
@@ -103,20 +102,30 @@ public class CartService {
                     totalAmount,
                     cart.getItems()
             );
+            // Send UPDATE request to Products service
+            ProductStockResponse productStockResponse = webClient.build().put()
+                    .uri("http://product-service/api/products/checkout")
+                    .bodyValue(cart.getItems())
+                    .retrieve()
+                    .bodyToMono(ProductStockResponse.class)
+                    .block();
+        System.out.println(productStockResponse);
             // Send POST request to Order service
-            String response = webClient.build().post()
-                    .uri("http://orders/api/orders/create")
+            String orderServiceResponse = webClient.build().post()
+                    .uri("http://order-service/api/orders/create")
                     .bodyValue(createOrderRequest)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
-            // Mark cart as CHECKED_OUT
-            cart.setStatus(CartStatus.CHECKED_OUT);
-            cart.getItems().clear();
-            cartRepository.save(cart);
-
-            return response;
-        }else{
+            if (productStockResponse != null && productStockResponse.getStatus() == 200 && orderServiceResponse != null && orderServiceResponse.equals("Success")) {
+                cart.setStatus(CartStatus.CHECKED_OUT);
+                cart.getItems().clear();
+                cartRepository.save(cart);
+                return "Order Created Successfully";
+            }else{
+                return "Order Failed";
+            }
+        } else {
             return "Cart Error";
         }
     }
